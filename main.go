@@ -50,6 +50,12 @@ func command_create(p string) {
 				copy(frame[0:], frame[1:])
 				frame[2] = p
 				fault++
+			} else if p == frame[2] {
+				frame[2] = p
+				//fmt.Printf("push")
+			} else if p == frame[1] {
+				frame[1] = frame[2]
+				frame[2] = p
 			} else {
 				copy(frame[0:], frame[1:])
 				frame[2] = p
@@ -63,10 +69,10 @@ func main() {
 	for {
 		showProcess()
 		command := getCommand()
-		if command == "exit"{ 
-			return 
-		} else {
-			command_create(command)
+		switch command {
+		case "1","2","3","4","5","6","7","8","9","0": command_create(command)
+		case "exit": return
+		default: fmt.Printf("\nSystax error!\n")			
 		}
 	}
 }
