@@ -8,23 +8,29 @@ import (
 )
 
 var (
-	frame []string
+	stack []string
+	page []string
 	fault int
 )
 
 func initialized() {
-	frame = make([]string, 3)
-	frame[0] = "-"
-	frame[1] = "-"
-	frame[2] = "-"
+	stack = make([]string, 3)
+	page = make([]string, 3)
+	stack[0] = "-"
+	stack[1] = "-"
+	stack[2] = "-"
+	page[0] = "-"
+	page[1] = "-"
+	page[2] = "-"
 	fault = 0
 }
 
 func showProcess() {
 	fmt.Printf("\n--------------------\n")
-	fmt.Printf("|  %s  |  %s  |  %s  |", frame[0], frame[1], frame[2])
+	fmt.Printf("|  %s  |  %s  |  %s  |", page[0], page[1], page[2])
 	fmt.Printf("\n--------------------\n")
 	fmt.Printf("\nPage-fault = %d\n\n", fault)
+	fmt.Printf("(|  %s  |  %s  |  %s  |)\n\n", stack[0], stack[1], stack[2])
 	fmt.Printf("\nCommand > ")
 }
 
@@ -36,32 +42,41 @@ func getCommand() string {
 }
 
 func command_create(p string) {
-		if frame[0] == "-" && frame[1] == "-" && frame[2] == "-" {
-			frame[0] = p
-			fault++
-		} else if frame[0] != "-" && frame[1] == "-" && frame[2] == "-" {
-			frame[1] = p
-			fault++
-		} else if frame[0] != "-" && frame[1] != "-" && frame[2] == "-" {
-			frame[2] = p
-			fault++
+	if stack[0] == "-" && stack[1] == "-" && stack[2] == "-" {
+		stack[0] = p
+		page[0] = stack[0]
+		fault++
+	} else if stack[0] != "-" && stack[1] == "-" && stack[2] == "-" {
+		stack[1] = p
+		page[1] = stack[1]
+		fault++
+	} else if stack[0] != "-" && stack[1] != "-" && stack[2] == "-" {
+		stack[2] = p
+		page[2] = stack[2]
+		fault++
+	} else {
+		if p != stack[0] && p != stack[1] &&  p != stack[2] {
+			for i := range page {
+				if page[i] == stack[0] {
+					page[i] = p
+					copy(stack[0:], stack[1:])
+					stack[2] = p
+					fault++
+					break
+				}
+			} 
+		} else if p == stack[2] {
+			stack[2] = p
+			page[2] = stack[2]
+			//fmt.Printf("push")
+		} else if p == stack[1] {
+			stack[1] = stack[2]
+			stack[2] = p
 		} else {
-			if p != frame[0] && p != frame[1] &&  p != frame[2] {
-				copy(frame[0:], frame[1:])
-				frame[2] = p
-				fault++
-			} else if p == frame[2] {
-				frame[2] = p
-				//fmt.Printf("push")
-			} else if p == frame[1] {
-				frame[1] = frame[2]
-				frame[2] = p
-			} else {
-				copy(frame[0:], frame[1:])
-				frame[2] = p
-			}
+			copy(stack[0:], stack[1:])
+			stack[2] = p
 		}
-	
+	}
 }
 
 func main() {
